@@ -4,7 +4,18 @@ from copy import deepcopy
 
 
 
-def get_table_dimensions(table):
+def get_table_dimensions(
+    table: List[Dict[str, Any]]
+) -> Tuple[int, int]:
+    """
+    Returns the number of rows and columns in a table.
+
+    Args:
+        table (list): A list of dictionaries representing cells in the table. Each dictionary contains the keys 'row', 'column', 'row span', and 'column span'.
+
+    Returns:
+        tuple: A tuple containing the number of rows and columns in the table.
+    """
     rows = set()
     cols = set()
     for cell in table:
@@ -17,7 +28,22 @@ def get_table_dimensions(table):
     return n_rows, n_cols
 
 
-def assert_dict_list_table(table, n_rows=None, n_cols=None):
+def assert_dict_list_table(
+    table: List[Dict[str, Any]]
+    n_rows: int=None,
+    n_cols: int=None
+) -> None:
+    """
+    Asserts that the cells in a table do not exceed the specified number of rows and columns.
+
+    Args:
+        table (list): A list of dictionaries representing cells in the table. Each dictionary contains the keys 'row', 'column', 'row span', and 'column span'.
+        n_rows (int, optional): The maximum number of rows in the table. Defaults to None.
+        n_cols (int, optional): The maximum number of columns in the table. Defaults to None.
+
+    Raises:
+        AssertionError: If any cell in the table exceeds the specified number of rows or columns.
+    """
     if n_rows is None and n_cols is None:
         n_rows, n_cols = get_table_dimensions(table)
     for cell in table:
@@ -25,18 +51,57 @@ def assert_dict_list_table(table, n_rows=None, n_cols=None):
         assert cell['column'] + cell['column span'] - 1 <= n_cols
 
 
-def get_grid(n_rows, n_cols):
+def get_grid(
+    n_rows: int,
+    n_cols: int
+) -> List[List[int]]:
+    """
+    Returns a 2D list representing a grid with the specified number of rows and columns.
+
+    Args:
+        n_rows (int): The number of rows in the grid.
+        n_cols (int): The number of columns in the grid.
+
+    Returns:
+        list: A 2D list representing the grid, with all elements initialized to 0.
+    """
     return np.full((n_rows, n_cols), 0).tolist()
 
 
-def add_cell_to_grid(grid, cell):
+def add_cell_to_grid(
+    grid: List[List[int]],
+    cell: Dict[str, Any]
+) -> None:
+    """
+    Adds a cell to a grid by setting the corresponding elements to 1.
+
+    Args:
+        grid (list): A 2D list representing the grid.
+        cell (dict): A dictionary representing the cell to add. The dictionary must contain the keys 'row', 'column', 'row span', and 'column span'.
+
+    Raises:
+        AssertionError: If any element in the grid is already set to 1.
+    """
     for _row in range(cell['row'], cell['row'] + cell['row span']):
         for _col in range(cell['column'], cell['column'] + cell['column span']):
             assert not grid[_row][_col]
             grid[_row][_col] = 1
 
 
-def add_cell_text_to_grid(grid, cell):
+def add_cell_text_to_grid(
+    grid: List[List[str]],
+    cell: Dict[str, Any]
+) -> None:
+    """
+    Adds the text of a cell to a grid by setting the corresponding elements to the cell's text.
+
+    Args:
+        grid (list): A 2D list representing the grid.
+        cell (dict): A dictionary representing the cell to add. The dictionary contains the keys 'row', 'column', 'row span', 'column span', and 'text'.
+
+    Raises:
+        AssertionError: If any element in the grid is already set to a non-empty string.
+    """
     for _row in range(cell['row'], cell['row'] + cell['row span']):
         for _col in range(cell['column'], cell['column'] + cell['column span']):
             assert grid[_row][_col] == 0
@@ -46,14 +111,60 @@ def add_cell_text_to_grid(grid, cell):
                 grid[_row][_col] = ''
 
 
-def add_cell_position_to_grid(grid, cell):
+def add_cell_position_to_grid(
+    grid: List[List[str]],
+    cell: Dict[str, Any]
+) -> None:
+    """
+    Adds the position of a cell to a grid by setting the corresponding elements to a tuple of the cell's row and column.
+
+    Args:
+        grid (list): A 2D list representing the grid.
+        cell (dict): A dictionary representing the cell to add. The dictionary contains the keys 'row', 'column', 'row span', and 'column span'.
+
+    Raises:
+        AssertionError: If any element in the grid is already set to a non-zero tuple.
+    """
     for _row in range(cell['row'], cell['row'] + cell['row span']):
         for _col in range(cell['column'], cell['column'] + cell['column span']):
             assert grid[_row][_col] == 0
             grid[_row][_col] = (cell['row'], cell['column'])
 
 
-def get_html_table(table, n_rows):
+def assert_cell_position_uniqueness(
+    table: List[Dict[str, Any]]
+) -> None:
+    """
+    Asserts that each cell in a table has a unique position.
+
+    Args:
+        table (List[Dict[str, Any]]): A list of dictionaries representing cells in the table. Each dictionary must contain the keys 'row', 'column', 'row span', and 'column span'.
+
+    Raises:
+        AssertionError: If any two cells in the table have the same position.
+    """
+    n_rows, n_cols = get_table_dimensions(table)
+    grid = get_grid(n_rows, n_cols)
+    for cell in table:
+        add_cell_to_grid(grid, cell)
+    for cell in table:
+        assert cell
+
+
+def get_html_table(
+    table: List[Dict[str, Any]],
+    n_rows: int
+) -> str:
+    """
+    Returns an HTML table string from a list of dictionaries representing cells in the table.
+
+    Args:
+        table (list): A list of dictionaries representing cells in the table. Each dictionary contains the keys 'row', 'column', 'row span', 'column span', 'text', and 'is_header' (optional).
+        n_rows (int): The number of rows in the table.
+
+    Returns:
+        str: An HTML table string.
+    """
     html_table = '<table>'
     table = sorted(table, key=lambda x: (x['row'], x['column']))
     for _row in range(n_rows):
@@ -75,7 +186,22 @@ def get_html_table(table, n_rows):
     return html_table
 
 
-def get_plain_table(table, n_rows, separator='\t'):
+def get_plain_table(
+    table: List[Dict[str, Any]],
+    n_rows: int,
+    separator: str='\t'
+) -> str:
+    """
+    Returns a plain text table string from a list of dictionaries representing cells in the table.
+
+    Args:
+        table (list): A list of dictionaries representing cells in the table. Each dictionary contains the keys 'row', 'column', 'row span', 'column span', and 'text'.
+        n_rows (int): The number of rows in the table.
+        separator (str, optional): The separator to use between cells. Defaults to '\t'.
+
+    Returns:
+        str: A plain text table string.
+    """
     plain_table = ''
     table = sorted(table, key=lambda x: (x['row'], x['column']))
     for _row in range(n_rows):
@@ -88,7 +214,22 @@ def get_plain_table(table, n_rows, separator='\t'):
     return plain_table
 
 
-def get_column_lengths(table, n_rows, n_cols):
+def get_column_lengths(
+    table: List[Dict[str, Any]],
+    n_rows: int,
+    n_cols: int
+) -> List[int]:
+    """
+    Returns a list of the maximum lengths of each column in a table.
+
+    Args:
+        table (list): A list of dictionaries representing cells in the table. Each dictionary contains the keys 'row', 'column', 'row span', 'column span', and 'text'.
+        n_rows (int): The number of rows in the table.
+        n_cols (int): The number of columns in the table.
+
+    Returns:
+        list: A list of integers representing the maximum length of each column in the table.
+    """
     col_lengths = []
     for _col in range(n_cols):
         col_lengths.append([])
@@ -100,7 +241,24 @@ def get_column_lengths(table, n_rows, n_cols):
     return col_lengths
 
 
-def get_plain_table_with_horizontal_spacing(table, n_rows, n_cols, separator='\t'):
+def get_plain_table_with_horizontal_spacing(
+    table: List[Dict[str, Any]],
+    n_rows: int,
+    n_cols: int,
+    separator: str='\t'
+) -> str:
+    """
+    Returns a plain text table string with horizontal spacing from a list of dictionaries representing cells in the table.
+
+    Args:
+        table (list): A list of dictionaries representing cells in the table. Each dictionary contains the keys 'row', 'column', 'row span', 'column span', and 'text'.
+        n_rows (int): The number of rows in the table.
+        n_cols (int): The number of columns in the table.
+        separator (str, optional): The separator to use between cells. Defaults to '\t'.
+
+    Returns:
+        str: A plain text table string with horizontal spacing.
+    """
     grid = get_grid(n_rows, n_cols)
     for cell in table:
         add_cell_position_to_grid(grid, cell)
@@ -129,7 +287,20 @@ def get_plain_table_with_horizontal_spacing(table, n_rows, n_cols, separator='\t
     return plain_table
 
 
-def split_long_cell_to_rows(cell, max_len=100):
+def split_long_cell_to_rows(
+    cell: Dict[str, Any],
+    max_len: int=100
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """
+    Splits a cell into multiple rows if its text length exceeds a maximum length.
+
+    Args:
+        cell (dict): A dictionary representing a cell in the table. It contains the keys 'row', 'column', 'row span', 'column span', and 'text'.
+        max_len (int, optional): The maximum length of the cell text. Defaults to 100.
+
+    Returns:
+        tuple: A tuple of two lists. The first list contains the existing rows of the cell, and the second list contains the new rows created from splitting the cell.
+    """
     if len(cell['text']) > max_len:
         text_split = cell['text'].split(' ')
         cell_texts = []
@@ -159,7 +330,20 @@ def split_long_cell_to_rows(cell, max_len=100):
         return [cell], []
 
 
-def split_long_cell_to_new_row(cell, max_len=100):
+def split_long_cell_to_new_row(
+    cell: Dict[str, Any],
+    max_len: int=100
+):
+    """
+    Splits a cell into two cells if its text length exceeds a maximum length.
+
+    Args:
+        cell (dict): A dictionary representing a cell in the table. It contains the keys 'row', 'column', 'row span', 'column span', and 'text'.
+        max_len (int, optional): The maximum length of the cell text. Defaults to 100.
+
+    Returns:
+        tuple: A tuple of three elements. The first element is the old cell with the text truncated to fit the maximum length. The second element is the new cell with the remaining text. The third element is a boolean indicating whether a new row is required.
+    """
     if len(cell['text']) > max_len:
         text_split = cell['text'].split(' ')
         temp_text = text_split.pop(0)
@@ -186,7 +370,26 @@ def split_long_cell_to_new_row(cell, max_len=100):
         return cell, None, False
 
 
-def get_plain_table_with_vertical_spacing(table, n_rows, n_cols, separator='\t', max_len=100):
+def get_plain_table_with_vertical_spacing(
+    table: List[Dict[str, Any]],
+    n_rows: int,
+    n_cols: int,
+    separator: str='\t',
+    max_len: int=100
+):
+    """
+    Returns a plain text table string with vertical spacing from a list of dictionaries representing cells in the table.
+
+    Args:
+        table (list): A list of dictionaries representing cells in the table. Each dictionary contains the keys 'row', 'column', 'row span', 'column span', and 'text'.
+        n_rows (int): The number of rows in the table.
+        n_cols (int): The number of columns in the table.
+        separator (str, optional): The separator to use between cells. Defaults to '\t'.
+        max_len (int, optional): The maximum length of the cell text before it is split into multiple rows. Defaults to 100.
+
+    Returns:
+        str: A plain text table string with vertical spacing.
+    """
     table_copy = deepcopy(table)
     index2rows_map = {}
     _row = 0
@@ -231,7 +434,18 @@ def get_plain_table_with_vertical_spacing(table, n_rows, n_cols, separator='\t',
     return get_plain_table_with_horizontal_spacing(new_table, n_rows, n_cols, separator)
 
 
-def get_json_table(table):
+def get_json_table(
+    table: List[Dict[str, Any]]
+):
+    """
+    Returns a JSON string representation of a table.
+
+    Args:
+        table (list): A list of dictionaries representing cells in the table. Each dictionary contains the keys 'row', 'column', 'row span', 'column span', 'text', and 'is_header' (optional).
+
+    Returns:
+        str: A JSON string representation of the table.
+    """
     assert table
     table = sorted(table, key=lambda x:(x['row'], x['column']))
     json_table = ''
