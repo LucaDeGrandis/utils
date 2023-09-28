@@ -32,8 +32,8 @@ def get_grid(n_rows, n_cols):
 def add_cell_to_grid(grid, cell):
     for _row in range(cell['row'], cell['row'] + cell['row span']):
         for _col in range(cell['column'], cell['column'] + cell['column span']):
-            assert not grid[_row][_cel]
-            grid[_row][_cel] = 1
+            assert not grid[_row][_col]
+            grid[_row][_col] = 1
 
 
 def add_cell_text_to_grid(grid, cell):
