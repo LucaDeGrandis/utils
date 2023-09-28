@@ -29,7 +29,7 @@ def get_table_dimensions(
 
 
 def assert_dict_list_table(
-    table: List[Dict[str, Any]]
+    table: List[Dict[str, Any]],
     n_rows: int=None,
     n_cols: int=None
 ) -> None:
