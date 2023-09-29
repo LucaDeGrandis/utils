@@ -59,16 +59,32 @@ def correct_table_rows(
         occupied_columns = 0
 
         # Loop over the cells in the current row
-        for cell in row:
+        new_row = []
+        while row:
+            cell = row.pop(0)
+            if cell['priority'] == 0 or cell['column span']>1:
+                # assert cell['column'] >= occupied_columns
+                for _cell in row:
+                    if _cell['priority'] == 0:
+                        _cell['column'] -= max(1, cell['column span'] - 1)
+                row = sorted(row, key=lambda x: (x['column'], x['priority']))
             if cell['column'] < occupied_columns:
                 cell['column'] = occupied_columns
+                offset = cell['column span']
+            new_row.append(cell)
             occupied_columns += cell['column span']
 
-        new_table.extend(list(filter(lambda x: x['priority']==1, row)))
+        # for cell in row:
+        #     if cell['column'] < occupied_columns:
+        #         cell['column'] = occupied_columns
+            
+        #     occupied_columns += cell['column span']
+
+        new_table.extend(list(filter(lambda x: x['priority']==1, new_row)))
 
         # Get the occupied positions in the next row
         next_row_occupied = []
-        for cell in row:
+        for cell in new_row:
             for j in range(cell['row']+1, cell['row']+cell['row span']):
                 next_row_occupied.append({'row': j, 'column': cell['column'], 'row span': 1, 'column span': cell['column span'], 'priority': 0})
 
