@@ -5,6 +5,68 @@ from typing import List, Dict, Union, Any, Tuple
 
 
 
+def correct_table_cells(
+    table: List[Dict[str, int]]
+) -> List[Dict[str, int]]:
+    """Corrects the row and column indexes of the cells in the given table.
+
+    Args:
+        table: A list of dictionaries representing the cells of the table. Each dictionary
+            should have the following keys: 'text', 'row', 'column', 'row span', 'column span',
+            and 'is_header'. The 'row' and 'column' keys represent the 0-based row and column
+            indexes of the cell, respectively. The 'row span' and 'column span' keys represent
+            the number of rows and columns that the cell spans over, respectively.
+
+    Returns:
+        A new list of dictionaries representing the corrected table. The dictionaries have the
+        same keys as the input table.
+
+    Raises:
+        TypeError: If the input table is not a list of dictionaries.
+    """
+    table_copy = deepcopy(table)
+    index2rows_map = {}
+    _row = 0
+    while True:
+        row = list(filter(lambda x: x['row']==_row, table_copy))
+        row = sorted(row, key=lambda x:x['column'])
+        table_copy = list(filter(lambda x: x['row']!=_row, table_copy))
+        row_cells = []
+        new_cells = []
+        new_row_requirements = []
+        for cell in row:
+            old_cell, new_cell, require_new_row = split_long_cell_to_new_row(cell, max_len)
+            # print(old_cell)
+            # print(new_cell)
+            row_cells.append(old_cell)
+            if new_cell is not None:
+                new_cells.append(new_cell)
+            new_row_requirements.append(require_new_row)
+        for cell in row_cells:
+            cell['row'] = _row
+        if not sum(new_row_requirements):
+            for cell in new_cells:
+                cell['row span'] = max(1, cell['row span']-1)
+                table_copy.append(cell)
+        else:
+            for cell in new_cells:
+                cell['row span'] = max(1, cell['row span']-1)
+            for cell in table_copy:
+                cell['row'] += 1
+            table_copy.extend(new_cells)
+        index2rows_map[_row] = row_cells
+        if not table_copy:
+            break
+        _row = min([x['row'] for x in table_copy])
+
+    new_table = []
+    for key, row in index2rows_map.items():
+        new_table += row
+    new_table = sorted(new_table,key=lambda x:(x['row'],x['column']))
+    
+    return new_table
+
+
 def get_table_dimensions(
     table: List[Dict[str, Any]]
 ) -> Tuple[int, int]:
