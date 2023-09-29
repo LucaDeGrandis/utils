@@ -5,65 +5,73 @@ from typing import List, Dict, Union, Any, Tuple
 
 
 
-def correct_table_cells(
-    table: List[Dict[str, int]]
-) -> List[Dict[str, int]]:
-    """Corrects the row and column indexes of the cells in the given table.
+def correct_table_rows(
+    table: List[Dict[str, Union[str, int, bool]]]
+) -> List[List[Dict[str, Union[str, int, bool]]]]:
+    """
+    Corrects the row indexes of the cells in the given table.
 
     Args:
-        table: A list of dictionaries representing the cells of the table. Each dictionary
-            should have the following keys: 'text', 'row', 'column', 'row span', 'column span',
-            and 'is_header'. The 'row' and 'column' keys represent the 0-based row and column
-            indexes of the cell, respectively. The 'row span' and 'column span' keys represent
-            the number of rows and columns that the cell spans over, respectively.
+        table: A list of lists representing the rows of the table. Each row is a list of dictionaries
+            representing the cells of the table. Each dictionary should have the following keys:
+            'text', 'row', 'column', 'row span', 'column span', and 'is_header'. The 'row' and 'column'
+            keys represent the 0-based row and column indexes of the cell, respectively. The 'row span'
+            and 'column span' keys represent the number of rows and columns that the cell spans over,
+            respectively.
 
     Returns:
-        A new list of dictionaries representing the corrected table. The dictionaries have the
-        same keys as the input table.
+        A new list of lists representing the corrected table. The dictionaries have the same keys as
+        the input table.
 
     Raises:
-        TypeError: If the input table is not a list of dictionaries.
+        TypeError: If the input table is not a list of lists of dictionaries.
     """
+    # Make a deep copy of the input table to avoid modifying it
     table_copy = deepcopy(table)
-    index2rows_map = {}
-    _row = 0
-    while True:
-        row = list(filter(lambda x: x['row']==_row, table_copy))
-        row = sorted(row, key=lambda x:x['column'])
-        table_copy = list(filter(lambda x: x['row']!=_row, table_copy))
-        row_cells = []
-        new_cells = []
-        new_row_requirements = []
-        for cell in row:
-            old_cell, new_cell, require_new_row = split_long_cell_to_new_row(cell, max_len)
-            # print(old_cell)
-            # print(new_cell)
-            row_cells.append(old_cell)
-            if new_cell is not None:
-                new_cells.append(new_cell)
-            new_row_requirements.append(require_new_row)
-        for cell in row_cells:
-            cell['row'] = _row
-        if not sum(new_row_requirements):
-            for cell in new_cells:
-                cell['row span'] = max(1, cell['row span']-1)
-                table_copy.append(cell)
-        else:
-            for cell in new_cells:
-                cell['row span'] = max(1, cell['row span']-1)
-            for cell in table_copy:
-                cell['row'] += 1
-            table_copy.extend(new_cells)
-        index2rows_map[_row] = row_cells
-        if not table_copy:
-            break
-        _row = min([x['row'] for x in table_copy])
 
-    new_table = []
-    for key, row in index2rows_map.items():
-        new_table += row
-    new_table = sorted(new_table,key=lambda x:(x['row'],x['column']))
+    # Isolate the rows:
+    rows_indexes = set([i for cell in table_copy for i in range(cell['row'], cell['row']+cell['row span'])])
+    rows_indexes = sorted(rows_indexes)
     
+    # Put the cells in a row_dictionary
+    row_dictionary = {}
+    for row_index in rows_indexes:
+        row = list(filter(lambda x: x['row']==row_index, table_copy))
+        for cell in row:
+            cell['priority'] = 1
+        row_dictionary[row_index] = row
+
+    # Loop over the rows of the table
+    pointer = 0
+    next_row_occupied = []
+    new_table = []
+    while pointer < len(rows_indexes):
+        # add the next row occupied cells to the relative row
+        for cell in next_row_occupied:
+            row_dictionary[cell['row']].append(cell)
+
+        # Update the pointer and get the current row
+        i = pointer
+        row = row_dictionary[i]
+        row = sorted(row, key=lambda x: (x['column'], x['priority']))
+
+        # Initialize a pointer to keep track of the occupied columns
+        occupied_columns = 0
+
+        # Loop over the cells in the current row
+        for cell in row:
+            if cell['column'] < occupied_columns:
+                cell['column'] = occupied_columns
+            occupied_columns += cell['column span']
+
+        new_table.extend(list(filter(lambda x: x['priority']==1, row)))
+
+        # Get the occupied positions in the next row
+        next_row_occupied = []
+        for cell in row:
+            for j in range(cell['row']+1, cell['row']+cell['row span']):
+                next_row_occupied.append({'row': j, 'column': cell['column'], 'row span': 1, 'column span': cell['column span'], 'priority': 0})
+
     return new_table
 
 
