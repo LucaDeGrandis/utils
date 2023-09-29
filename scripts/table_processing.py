@@ -5,6 +5,42 @@ from typing import List, Dict, Union, Any, Tuple
 
 
 
+def complete_table(
+    table: List[Dict[str, Any]],
+    completion: str='',
+) -> List[Dict[str, Any]]:
+    """Adds empty cells to a table to complete it.
+
+    Args:
+        table: A list of dictionaries representing the cells of the table. Each dictionary should have the
+            following keys: 'text', 'row', 'column', 'row span', 'column span', and 'is_header'. The 'row' and
+            'column' keys represent the 0-based row and column indexes of the cell, respectively. The 'row span'
+            and 'column span' keys represent the number of rows and columns that the cell spans over, respectively.
+        completion: A string to use as the text for the empty cells that are added to the table. Defaults to ''.
+
+    Returns:
+        A new list of dictionaries representing the cells of the completed table. The dictionaries have the same
+        keys as the input table.
+
+    Raises:
+        AssertionError: If the input table is not a list of dictionaries or if the table contains invalid cells.
+    """
+
+    # Populate the grid with non-empty spaces in the table
+    n_rows, n_cols = get_table_dimensions(table)
+    grid = get_grid(n_rows, n_cols)
+    assert_dict_list_table(table)
+    grid = assert_cell_position_uniqueness(table, grid)
+
+    # Introduce empty cells where the grid has empty spaces
+    for _row, row in enumerate(grid):
+        for _col, cell in enumerate(row):
+            if not cell:
+                table.append({'row': _row, 'column': _col, 'row span': 1, 'column span': 1, 'text': completion})
+
+    return table
+
+
 def correct_table_rows(
     table: List[Dict[str, Union[str, int, bool]]]
 ) -> List[List[Dict[str, Union[str, int, bool]]]]:
