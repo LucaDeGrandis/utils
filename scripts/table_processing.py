@@ -72,6 +72,9 @@ def correct_table_rows(
             for j in range(cell['row']+1, cell['row']+cell['row span']):
                 next_row_occupied.append({'row': j, 'column': cell['column'], 'row span': 1, 'column span': cell['column span'], 'priority': 0})
 
+        # update the pointer
+        pointer += 1
+
     return new_table
 
 
