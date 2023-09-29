@@ -190,7 +190,8 @@ def get_html_table(
 def get_plain_table(
     table: List[Dict[str, Any]],
     n_rows: int,
-    separator: str='\t'
+    separator: str='\t',
+    filter_empty: bool=False
 ) -> str:
     """
     Returns a plain text table string from a list of dictionaries representing cells in the table.
@@ -199,6 +200,7 @@ def get_plain_table(
         table (list): A list of dictionaries representing cells in the table. Each dictionary contains the keys 'row', 'column', 'row span', 'column span', and 'text'.
         n_rows (int): The number of rows in the table.
         separator (str, optional): The separator to use between cells. Defaults to '\t'.
+        filter_empty (bool, optional): Whether to filter out empty cells or not. Default to False.
 
     Returns:
         str: A plain text table string.
@@ -206,7 +208,10 @@ def get_plain_table(
     plain_table = ''
     table = sorted(table, key=lambda x: (x['row'], x['column']))
     for _row in range(n_rows):
-        row = filter(lambda x: x['row']==_row, table)
+        if not filter_empty:
+            row = filter(lambda x: x['row']==_row, table)
+        else:
+            row = filter(lambda x: x['row']==_row and cell['text'].strip() != '', table)
         for cell in row:
             plain_table += cell['text']
             plain_table += separator
