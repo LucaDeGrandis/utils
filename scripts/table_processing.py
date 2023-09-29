@@ -284,7 +284,7 @@ def get_plain_table(
         if not filter_empty:
             row = filter(lambda x: x['row']==_row, table)
         else:
-            row = filter(lambda x: x['row']==_row and cell['text'].strip() != '', table)
+            row = filter(lambda x: x['row']==_row and x['text'].strip() != '', table)
         for cell in row:
             plain_table += cell['text']
             plain_table += separator
