@@ -15,8 +15,10 @@ def table_rows_to_dict_list(
     assert isinstance(table_rows[0][0], dict)
 
     if 'column' in table_rows[0][0]:
+        print('Using table_rows_to_dict_list_with_row_column_index')
         return table_rows_to_dict_list_with_row_column_index(table_rows)
     else:
+        print('Using table_rows_to_dict_list_without_row_column_index')
         return table_rows_to_dict_list_without_row_column_index(table_rows)
 
 
@@ -42,7 +44,7 @@ def table_rows_to_dict_list_with_row_column_index(
     Raises:
         TypeError: If the input table is not a list of lists of dictionaries.
     """
-    for _row, row in table_rows:
+    for _row, row in enumerate(table_rows):
         for cell in row:
             assert 'row' in cell
             assert 'column' in cell
@@ -86,6 +88,7 @@ def table_rows_to_dict_list_with_row_column_index(
                     'row span': 1,
                     'column span': 1,
                     'is_header': False,
+                    'text': ''
                 })
     table = sorted(table, key=lambda x: (x['row'], x['column']))
 
@@ -136,7 +139,7 @@ def table_rows_to_dict_list_without_row_column_index(
                     extra_rows[row_index].append(col_index)  # add the extra rows to the list
         columns_by_row.append(n_cols)
     if extra_rows:
-        n_rows = max(list(extra_rows.keys())) + 1
+        n_rows = max([max(list(extra_rows.keys())) + 1, len(table_rows)])
     else:
         n_rows = _row + 1
     n_cols = max(columns_by_row)
@@ -168,10 +171,244 @@ def table_rows_to_dict_list_without_row_column_index(
                     'row span': 1,
                     'column span': 1,
                     'is_header': False,
+                    'text': ''
                 })
     table = sorted(table, key=lambda x: (x['row'], x['column']))
 
     return table
+
+
+
+def table_rows_to_dict_list_without_row_column_index2(
+    table_rows: List[List[Dict[str, Any]]]
+) -> List[Dict[str, Any]]:
+    """
+    Converts a list of lists representing the rows of a table to a list of dictionaries representing the cells of the table.
+
+    Args:
+        table_rows (list): A list of lists representing the rows of the table.
+            Each row is a list of dictionaries representing the cells of the table.
+            Each dictionary should have the following keys: 'text', 'row span', 'column span', and 'is_header'.
+            The 'row span' and 'column span' keys represent the number of rows and columns that the cell spans over, respectively.
+            The 'row span' and 'column span' keys are optional. If absent they are set to 1 by default.
+            There can be extra rows at the end of the table but they are not expected between existing rows.
+
+    Returns:
+        list: A list of dictionaries representing the cells of the table.
+            The dictionaries have the same keys as the input table.
+
+    Raises:
+        TypeError: If the input table is not a list of lists of dictionaries.
+    """
+
+    def update_grid(
+        grid: List[List[int]],
+        n_cols: int
+    ) -> List[List[int]]:
+        """Updates a grid to have the same number of columns in each row.
+
+        Args:
+            grid: A list of lists representing the grid. Each inner list represents a row of the grid and contains
+                integers representing the cells in the row.
+
+        Returns:
+            None. The function modifies the input grid in place.
+
+        Raises:
+            None.
+        """
+        max_n_cols = max([len(x) for x in grid])
+        for grid_row in grid:
+            if len(grid_row) < max_n_cols:
+                grid_row.extend([0]*(max_n_cols-len(grid_row)))
+
+        return grid
+
+    def check_grid_occupation(
+        grid: List[List[int]],
+        row: List[Dict[str, Any]]
+    ) -> Tuple[bool, List[List[int]]]:
+        """
+        Checks if a given row of cells can be placed on a grid without overlapping with already occupied cells.
+
+        Args:
+            grid: A 2D list of integers representing the grid.
+            row: A list of dictionaries representing the cells to be placed on the grid. Each dictionary contains the following keys:
+                - 'column': An integer representing the starting column of the cell.
+                - 'row': An integer representing the starting row of the cell.
+                - 'column span': An integer representing the number of columns the cell spans.
+
+        Returns:
+            A tuple containing a boolean value indicating whether the cells can be placed on the grid without overlapping with already occupied cells, and a 2D list of integers representing the updated grid after placing the cells.
+        """
+        grid_c = deepcopy(grid)
+        green_light = True
+        for cell in row:
+            cell_column = deepcopy(cell['column'])
+            cell_row = deepcopy(cell['row'])
+            while grid_c[cell_row][cell_column]:
+                cell_column += 1
+            for _col in range(cell_column, cell_column+cell['column span']):
+                if not grid_c[cell_row][_col]:
+                    grid_c[cell_row][_col] = 1
+                else:
+                    green_light = False
+                    break
+
+        return green_light, grid_c
+
+    def update_table_rows(
+        table_rows: List[List[Dict[str, Any]]],
+        row_index: int
+    ) -> List[List[Dict[str, Any]]]:
+        """
+        Updates the row index of all cells in the table that have a row index greater than or equal to the given row index.
+
+        Args:
+            table_rows: A list of lists of dictionaries representing the table rows and cells. Each dictionary contains the following keys:
+                - 'row': An integer representing the row index of the cell.
+                - 'column': An integer representing the column index of the cell.
+                - Any other key-value pairs representing the cell data.
+            row_index: An integer representing the row index from which the cells' row index should be updated.
+
+        Returns:
+            A list of lists of dictionaries representing the updated table rows and cells.
+        """
+        for row in table_rows:
+            if not row:
+                continue
+            if row[0]['row'] < row_index:
+                continue
+            if row[0]['row'] >= row_index:
+                for cell in row:
+                    cell['row'] += 1
+
+        return table_rows
+
+    for row in table_rows:
+        for cell in row:
+            assert 'row' not in cell
+            assert 'column' not in cell
+            if 'column span' not in cell:
+                cell['column span'] = 1
+            if 'row span' not in cell:
+                cell['row span'] = 1
+
+    # Create and populate the table
+    grid = []
+    new_cells = []
+    for _row, row in enumerate(table_rows):
+        for cell in row:
+            cell['row'] = _row
+    occupied_positions = []
+
+    new_table = []
+    while table_rows:
+        row = table_rows.pop(0)
+        grid.append([])
+        _col = 0
+        previous_n_cols = max([len(x) for x in grid])
+        n_cols = max([previous_n_cols, sum([x['column span'] for x in row])])
+        grid[-1] = np.full(n_cols, 0).tolist()
+        row_occupied_positions = list(filter(lambda x: x[0]==_row, occupied_positions))
+        grid = update_grid(grid)
+        for _row, _col in row_occupied_positions:
+            grid[_row][_col] = 1
+        
+        # Check if the current row cells can fit in the grid
+        green_light, grid_c = check_grid_occupation(grid_c, row)
+        
+        if green_light:
+            occupied_positions = []
+            for cell in row:
+                while grid[cell['row']][cell['column']]:
+                    cell['column'] += 1
+                for _row in range(cell['row'], cell['row']+cell['row span']):
+                    for _col in range(cell['column'], cell['column']+cell['column span']):
+                        if _row == cell['row']:
+                            grid[cell['row']][_col] = 1
+                        else:
+                            occupied_positions.append((_row, _col))
+                new_table.append(cell)
+        else:
+            table_rows.insert(0, row)
+            update_table_rows(table_rows, row[0]['row'])
+            continue
+
+    for _row in range(len(grid)):
+        for _col in range(len(grid[_row])):
+            if grid[_row][_col]:
+                continue
+            new_table.append({
+                'row': _row,
+                'column': _col,
+                'row span': 1,
+                'column span': 1,
+                'is_header': False,
+                'text': ''
+            })
+
+    new_table = sorted(new_table, key=lambda x: (x['row'], x['column']))
+
+    return new_table
+
+
+
+
+
+
+    # Infer the number of rows and columns
+    columns_by_row = []
+    extra_rows = defaultdict(list)
+    for _row, row in enumerate(table_rows):
+        n_cols = 0
+        if _row in extra_rows:
+            n_cols += len(extra_rows[_row])
+        for cell in row:
+            n_cols += cell['column span']
+            for row_index in range(_row+1, _row+cell['row span']):
+                for col_index in range(cell['column span']):
+                    extra_rows[row_index].append(col_index)  # add the extra rows to the list
+        columns_by_row.append(n_cols)
+    if extra_rows:
+        n_rows = max([max(list(extra_rows.keys())) + 1, len(table_rows)])
+    else:
+        n_rows = _row + 1
+    n_cols = max(columns_by_row)
+
+    # Define and populate the table ansd the grid
+    grid = np.full((n_rows, n_cols), 0).tolist()
+    table = []
+    for _row, row in enumerate(table_rows):
+        _col = 0
+        for cell in row:
+            while grid[_row][_col]:
+                _col += 1
+            cell['row'] = _row
+            cell['column'] = _col
+            for row_index in range(cell['row'], cell['row']+cell['row span']):
+                for col_index in range(cell['column'], cell['column']+cell['column span']):
+                    assert not grid[row_index][col_index], \
+                        f'Cell {cell} could not be added to the table since the position "row_index": {row_index} and "col_index": {col_index} is already occupied by another cell.'
+                    grid[row_index][col_index] = 1
+            table.append(cell)
+
+    # Add empty cells to the table
+    for _row in range(n_rows):
+        for _col in range(n_cols):
+            if not grid[_row][_col]:
+                table.append({
+                    'row': _row,
+                    'column': _col,
+                    'row span': 1,
+                    'column span': 1,
+                    'is_header': False,
+                    'text': ''
+                })
+    table = sorted(table, key=lambda x: (x['row'], x['column']))
+
+    return table
+
 
 
 
