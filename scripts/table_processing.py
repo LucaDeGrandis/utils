@@ -131,8 +131,8 @@ def table_rows_to_dict_list_without_row_column_index(
             n_cols += len(extra_rows[_row])
         for cell in row:
             n_cols += cell['column span']
-            for row_index in range(cell['row']+1, cell['row']+cell['row span']):
-                for col_index in range(cell['column'], cell['column']+cell['column span']):
+            for row_index in range(_row+1, _row+cell['row span']):
+                for col_index in range(cell['column span']):
                     extra_rows[row_index].append(col_index)  # add the extra rows to the list
         columns_by_row.append(n_cols)
     n_rows = max(list(extra_rows.keys())) + 1
