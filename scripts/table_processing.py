@@ -531,8 +531,7 @@ def get_column_lengths(
         col_lengths.append([])
         col_cells = filter(lambda x:_col in list(range(x['column'], x['column'] + x['column span'])), table)
         for cell in col_cells:
-            if cell['column span']==1:
-                col_lengths[-1].append(ceil(len(cell['text'])/cell['column span']))
+            col_lengths[-1].append(ceil(len(cell['text'])/cell['column span']))
     col_lengths = [max(x) for x in col_lengths]
     return col_lengths
 
