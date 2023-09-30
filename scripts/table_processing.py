@@ -135,13 +135,16 @@ def table_rows_to_dict_list_without_row_column_index(
                 for col_index in range(cell['column span']):
                     extra_rows[row_index].append(col_index)  # add the extra rows to the list
         columns_by_row.append(n_cols)
-    n_rows = max(list(extra_rows.keys())) + 1
+    if extra_rows:
+        n_rows = max(list(extra_rows.keys())) + 1
+    else:
+        n_rows = _row + 1
     n_cols = max(columns_by_row)
 
     # Define and populate the table ansd the grid
     grid = np.full((n_rows, n_cols), 0).tolist()
     table = []
-    for _row, row in table_rows:
+    for _row, row in enumerate(table_rows):
         _col = 0
         for cell in row:
             while grid[_row][_col]:
