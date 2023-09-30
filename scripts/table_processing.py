@@ -202,8 +202,7 @@ def table_rows_to_dict_list_without_row_column_index2(
     """
 
     def update_grid(
-        grid: List[List[int]],
-        n_cols: int
+        grid: List[List[int]]
     ) -> List[List[int]]:
         """Updates a grid to have the same number of columns in each row.
 
