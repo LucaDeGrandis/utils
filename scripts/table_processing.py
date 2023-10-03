@@ -509,6 +509,75 @@ def get_html_table(
     return html_table
 
 
+def get_html_table_with_head_and_body(
+    table: List[Dict[str, Any]],
+    n_rows: int
+) -> str:
+    """
+    Returns an HTML table string from a list of dictionaries representing cells in the table.
+
+    Args:
+        table (list): A list of dictionaries representing cells in the table. Each dictionary contains the keys 'row', 'column', 'row span', 'column span', 'text', and 'is_header' (optional).
+        n_rows (int): The number of rows in the table.
+
+    Returns:
+        str: An HTML table string.
+    """
+    html_table = '<table>'
+    table = sorted(table, key=lambda x: (x['row'], x['column']))
+    
+    # Identify header rows
+    headers = []
+    bodies = []
+    for _row in range(n_rows):
+        row = filter(lambda x: x['row']==_row, table)
+        for cell in row:
+            if 'is_header' in cell and cell['is_header']:
+                headers.append(_row)
+                break
+            else:
+                bodies.append(_row)
+    headers = sorted(headers)
+    bodies = sorted(bodies)
+    
+    # Assert continuity of header rows
+    if len(headers)>1:
+        for _index in range(1, len(headers)):
+            assert headers[_index] - headers[_index-1] == 1
+    
+    for _row in range(n_rows):
+        row = filter(lambda x: x['row']==_row, table)
+        
+        # Assert that all cells are headers
+        if _row in headers:
+            for cell in row:
+                if cell['text'].strip() != '':
+                    assert 'is_header' in cell and cell['is_header']
+        
+        if _row == headers[0]:
+            html_table += '<thead>'
+        elif _row == headers[-1] + 1:
+            html_table += '<tbody>'
+        for cell in row:
+            cell_start = '<th' if ('is_header' in cell and cell['is_header']) else '<td'
+            cell_end = '</th>' if ('is_header' in cell and cell['is_header']) else '</td>'
+            html_table += cell_start
+            if cell["row span"]>1:
+                html_table += f' rowspan={cell["row span"]}'
+            if cell["column span"]>1:
+                html_table += f' colspan={cell["column span"]}'
+            html_table += '>'
+            html_table += cell['text']
+            html_table += cell_end
+        html_table += '</tr>'
+        if _row == headers[-1]:
+            html_table += '</thead>'
+        elif _row == n_rows -1:
+            html_table += '</tbody>'
+    html_table += '</table>'
+    return html_table
+
+
 def get_plain_table(
     table: List[Dict[str, Any]],
     n_rows: int,
