@@ -546,7 +546,7 @@ def get_html_table_with_head_and_body(
             assert headers[_index] - headers[_index-1] == 1
     
     for _row in range(n_rows):
-        row = filter(lambda x: x['row']==_row, table)
+        row = list(filter(lambda x: x['row']==_row, table))
         
         # Assert that all cells are headers
         if _row in headers:
@@ -558,6 +558,9 @@ def get_html_table_with_head_and_body(
             html_table += '<thead>'
         elif _row == headers[-1] + 1:
             html_table += '<tbody>'
+        
+        html_table += '<tr>'
+        
         for cell in row:
             cell_start = '<th' if ('is_header' in cell and cell['is_header']) else '<td'
             cell_end = '</th>' if ('is_header' in cell and cell['is_header']) else '</td>'
@@ -569,11 +572,14 @@ def get_html_table_with_head_and_body(
             html_table += '>'
             html_table += cell['text']
             html_table += cell_end
+        
         html_table += '</tr>'
+        
         if _row == headers[-1]:
             html_table += '</thead>'
         elif _row == n_rows -1:
             html_table += '</tbody>'
+
     html_table += '</table>'
     return html_table
 
