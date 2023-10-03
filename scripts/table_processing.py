@@ -512,7 +512,8 @@ def get_html_table(
 def get_html_table_with_head_and_body(
     table: List[Dict[str, Any]],
     n_rows: int,
-    separator: str=''
+    separator: str ='',
+    force_thead: bool =False
 ) -> str:
     """
     Returns an HTML table string from a list of dictionaries representing cells in the table.
@@ -531,11 +532,20 @@ def get_html_table_with_head_and_body(
     headers = []
     bodies = []
     for _row in range(n_rows):
-        row = filter(lambda x: x['row']==_row, table)
-        for cell in row:
-            if 'is_header' in cell and cell['is_header']:
+        row = list(filter(lambda x: x['row']==_row, table))
+        if not force_thead
+            for cell in row:
+                if 'is_header' in cell and cell['is_header']:
+                    headers.append(_row)
+                    break
+                else:
+                    bodies.append(_row)
+        else:
+            row = list(filter(lambda x: x['text'].strip()!='', row))
+            row_head = list(filter(lambda x: 'is_header' in x and x['is_header'], row))
+            row_body = list(filter(lambda x: ('is_header' not in x) or ('is_header' in x and not x['is_header']), row))
+            if row_head and not row_body:
                 headers.append(_row)
-                break
             else:
                 bodies.append(_row)
     headers = sorted(headers)
