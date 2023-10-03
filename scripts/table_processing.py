@@ -511,7 +511,8 @@ def get_html_table(
 
 def get_html_table_with_head_and_body(
     table: List[Dict[str, Any]],
-    n_rows: int
+    n_rows: int,
+    separator: str=''
 ) -> str:
     """
     Returns an HTML table string from a list of dictionaries representing cells in the table.
@@ -523,7 +524,7 @@ def get_html_table_with_head_and_body(
     Returns:
         str: An HTML table string.
     """
-    html_table = '<table>'
+    html_table = '<table>' + separator
     table = sorted(table, key=lambda x: (x['row'], x['column']))
     
     # Identify header rows
@@ -555,11 +556,11 @@ def get_html_table_with_head_and_body(
                     assert 'is_header' in cell and cell['is_header']
         
         if _row == headers[0]:
-            html_table += '<thead>'
+            html_table += '<thead>' + separator
         elif _row == headers[-1] + 1:
-            html_table += '<tbody>'
+            html_table += '<tbody>' + separator
         
-        html_table += '<tr>'
+        html_table += '<tr>' + separator
         
         for cell in row:
             cell_start = '<th' if ('is_header' in cell and cell['is_header']) else '<td'
@@ -569,16 +570,16 @@ def get_html_table_with_head_and_body(
                 html_table += f' rowspan={cell["row span"]}'
             if cell["column span"]>1:
                 html_table += f' colspan={cell["column span"]}'
-            html_table += '>'
-            html_table += cell['text']
-            html_table += cell_end
+            html_table += '>' + separator
+            html_table += cell['text'] + separator
+            html_table += cell_end + separator
         
-        html_table += '</tr>'
+        html_table += '</tr>' + separator
         
         if _row == headers[-1]:
-            html_table += '</thead>'
+            html_table += '</thead>' + separator
         elif _row == n_rows -1:
-            html_table += '</tbody>'
+            html_table += '</tbody>' + separator
 
     html_table += '</table>'
     return html_table
