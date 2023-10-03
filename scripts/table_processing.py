@@ -533,7 +533,7 @@ def get_html_table_with_head_and_body(
     bodies = []
     for _row in range(n_rows):
         row = list(filter(lambda x: x['row']==_row, table))
-        if not force_thead
+        if not force_thead:
             for cell in row:
                 if 'is_header' in cell and cell['is_header']:
                     headers.append(_row)
