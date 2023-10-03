@@ -7,8 +7,9 @@ In order to import the scripts you can run the following snippets:
 
 ```
 %%shell
+git clone https://github.com/LucaDeGrandis/utils.git
 cd utils
-pip install -r requirements.txt
+pip install -r requirements_colab.txt
 ```
 
 ```
