@@ -570,8 +570,8 @@ def get_html_table_with_head_and_body(
                 html_table += f' rowspan={cell["row span"]}'
             if cell["column span"]>1:
                 html_table += f' colspan={cell["column span"]}'
-            html_table += '>' + separator
-            html_table += cell['text'] + separator
+            html_table += '>'
+            html_table += cell['text']
             html_table += cell_end + separator
         
         html_table += '</tr>' + separator
