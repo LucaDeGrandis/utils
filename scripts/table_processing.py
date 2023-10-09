@@ -452,8 +452,7 @@ def add_cell_position_to_grid(
 
 
 def assert_cell_position_uniqueness(
-    table: List[Dict[str, Any]],
-    grid: List[List[Any]]
+    table: List[Dict[str, Any]]
 ) -> None:
     """
     Asserts that each cell in a table has a unique position.
