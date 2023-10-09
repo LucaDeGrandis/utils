@@ -234,7 +234,7 @@ def complete_table(
     n_rows, n_cols = get_table_dimensions(table)
     grid = get_grid(n_rows, n_cols)
     assert_dict_list_table(table)
-    grid = assert_cell_position_uniqueness(table, grid)
+    grid = assert_cell_position_uniqueness(table)
 
     # Introduce empty cells where the grid has empty spaces
     for _row, row in enumerate(grid):
