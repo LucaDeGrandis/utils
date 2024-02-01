@@ -6,13 +6,9 @@ There is no installation required. However a "requirements.txt" file will be add
 In order to import the scripts you can run the following snippets:
 
 ```
-%%shell
-git clone https://github.com/LucaDeGrandis/utils.git
-cd utils
-pip install -r requirements_colab.txt
-```
+!git clone https://github.com/LucaDeGrandis/utils.git
+!cd utils && pip install -r requirements_colab.txt
 
-```
 import os
 import glob
 import importlib.util
