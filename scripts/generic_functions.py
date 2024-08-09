@@ -1,6 +1,6 @@
 """Generic functions for projects in google colab.
 
-This file contains functions to load/write files in various formats.
+This file contains functions to load/write files in various formats. There is also a function to create directories.
 
 Covered formats:
     - json
@@ -10,6 +10,7 @@ Covered formats:
 
 from typing import List, Dict, Any, Union
 import matplotlib.pyplot as plt
+from pathlib import Path
 import json
 import os
 
@@ -159,3 +160,9 @@ def create_line_plot(
     plt.legend()
     plt.grid(True)
     plt.show()
+
+
+def make_dir(
+  path: str
+) -> None:
+    Path(path).mkdir(parents=True, exist_ok=True)
