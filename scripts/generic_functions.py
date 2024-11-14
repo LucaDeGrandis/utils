@@ -98,7 +98,8 @@ def write_jsonl_file(
 
 
 def load_txt_file(
-	filepath: str
+	filepath: str,
+	join: bool = False,
 ) -> List[str]:
     """Load a json into a list
     *arguments*
@@ -109,6 +110,8 @@ def load_txt_file(
         lines = reader.readlines()
         for line in lines:
             data.append(line)
+    if join:
+	data = "".join(data)
     return data
 
 
