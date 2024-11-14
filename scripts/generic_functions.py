@@ -111,7 +111,7 @@ def load_txt_file(
         for line in lines:
             data.append(line)
     if join:
-	data = "".join(data)
+        data = "".join(data)
     return data
 
 
